@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudimyrLearn — Science Administrative</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ==============================
+       PAGE DE CONNEXION
+  ============================== -->
+  <div id="login-page">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="logo-mark">📚</div>
+        <h1>ClaudimyrLearn</h1>
+        <p>Votre tuteur numérique en science administrative</p>
+      </div>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🎓</div>
+          <div>
+            <h4>6 modules complets</h4>
+            <p>Cours structurés du fondamental à l'avancé</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🤖</div>
+          <div>
+            <h4>Assistant IA intégré</h4>
+            <p>Posez vos questions, obtenez des réponses</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🧠</div>
+          <div>
+            <h4>Quiz interactifs</h4>
+            <p>Testez vos connaissances à tout moment</p>
+          </div>
+        </div>
+      </div>
+      <p class="auth-footer">© 2026 ClaudimyrLearn · Port-au-Prince, Haïti</p>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <h2>Bon retour !</h2>
+        <p class="auth-subtitle">Connectez-vous pour continuer votre apprentissage.</p>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-email">Adresse email</label>
+            <input type="email" id="login-email" placeholder="votre@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="login-pass">Mot de passe</label>
+            <input type="password" id="login-pass" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn-primary">Se connecter</button>
+        </form>
+        <div class="auth-divider">ou</div>
+        <button id="demo-btn" class="btn-ghost">👩‍💼 Essayer en mode démo</button>
+        <p class="auth-switch">
+          Pas encore de compte ?
+          <a href="#" id="show-register">Créer un compte</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE D'INSCRIPTION
+  ============================== -->
+  <div id="register-page">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="logo-mark">📚</div>
+        <h1>ClaudimyrLearn</h1>
+        <p>Commencez votre parcours aujourd'hui.</p>
+      </div>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">✅</div>
+          <div>
+            <h4>Gratuit et accessible</h4>
+            <p>Accès immédiat à tous les modules</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">📊</div>
+          <div>
+            <h4>Suivi personnalisé</h4>
+            <p>Vos progrès sauvegardés automatiquement</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🏆</div>
+          <div>
+            <h4>Points et badges</h4>
+            <p>Système de récompenses pour vous motiver</p>
+          </div>
+        </div>
+      </div>
+      <p class="auth-footer">© 2026 ClaudimyrLearn · Port-au-Prince, Haïti</p>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <h2>Créer un compte</h2>
+        <p class="auth-subtitle">Rejoignez ClaudimyrLearn et commencez à apprendre.</p>
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-name">Nom complet</label>
+            <input type="text" id="reg-name" placeholder="Marie Claire Dupont" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Adresse email</label>
+            <input type="email" id="reg-email" placeholder="votre@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-pass">Mot de passe</label>
+            <input type="password" id="reg-pass" placeholder="Minimum 6 caractères" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-pass2">Confirmer le mot de passe</label>
+            <input type="password" id="reg-pass2" placeholder="Répétez votre mot de passe" required>
+          </div>
+          <button type="submit" class="btn-primary">Créer mon compte 🚀</button>
+        </form>
+        <p class="auth-switch">
+          Déjà un compte ?
+          <a href="#" id="show-login">Se connecter</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       APPLICATION PRINCIPALE
+  ============================== -->
+  <div id="app-shell">
+
+    <!-- Barre du haut -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="burger-btn">☰</button>
+        <div class="topbar-logo">📚</div>
+        <span class="topbar-title">ClaudimyrLearn</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-points" id="topbar-points">✨ 0 pts</div>
+        <div class="avatar" id="user-avatar">MC</div>
+      </div>
+    </header>
+
+    <!-- Menu latéral -->
+    <nav id="sidebar">
+      <div class="nav-section-label">Navigation</div>
+      <button class="nav-link active" data-page="dashboard">
+        <span>🏠</span> Tableau de bord
+      </button>
+      <button class="nav-link" data-page="cours">
+        <span>📚</span> Mes Cours
+      </button>
+      <button class="nav-link" data-page="exercices">
+        <span>🧠</span> Exercices
+      </button>
+      <button class="nav-link" data-page="assistant">
+        <span>🤖</span> Assistant IA
+      </button>
+
+      <div class="nav-section-label" style="margin-top:16px">Compte</div>
+      <button class="nav-link" data-page="progression">
+        <span>📊</span> Ma Progression
+      </button>
+      <button class="nav-link" data-page="profil">
+        <span>👤</span> Mon Profil
+      </button>
+      <button class="nav-link" data-page="parametres">
+        <span>⚙️</span> Paramètres
+      </button>
+
+      <div class="sidebar-bottom">
+        <button class="nav-link" id="logout-btn" style="color:#FF5E5B">
+          <span>🚪</span> Déconnexion
+        </button>
+      </div>
+    </nav>
+
+    <!-- Overlay mobile -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- Contenu principal -->
+    <main class="main-content">
+
+      <!-- Dashboard -->
+      <div id="page-dashboard" class="page-view active">
+        <div class="welcome-banner">
+          <div>
+            <h2>Bonjour, <span id="welcome-name">Marie</span> 👋</h2>
+            <p>Continuez votre apprentissage en science administrative.</p>
+            <div class="streak-badge">🔥 Série : <span id="dash-streak">0</span> jours</div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(91,79,207,0.12)">📈</div>
+            <div class="stat-value" id="dash-progress">0%</div>
+            <div class="stat-label">Progression</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(255,94,91,0.12)">📖</div>
+            <div class="stat-value" id="dash-lessons">0</div>
+            <div class="stat-label">Leçons terminées</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(255,209,102,0.2)">✨</div>
+            <div class="stat-value" id="dash-points">0</div>
+            <div class="stat-label">Points gagnés</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(6,214,160,0.12)">🧠</div>
+            <div class="stat-value" id="dash-quiz">0</div>
+            <div class="stat-label">Quiz complétés</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="section-title">📚 Modules disponibles</div>
+            <div id="modules-list"></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="section-title">⚡ Actions rapides</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <button class="btn-primary" onclick="allerVers('cours')"
+                  style="padding:12px">
+                  📖 Continuer les cours
+                </button>
+                <button class="btn-coral" onclick="allerVers('exercices')"
+                  style="padding:12px">
+                  🧠 Faire un quiz
+                </button>
+                <button class="btn-ghost" onclick="allerVers('assistant')"
+                  style="padding:12px">
+                  🤖 Demander à l'IA
+                </button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-title">💡 Conseil du jour</div>
+              <p style="font-size:0.88rem;font-style:italic;color:#4A4065">
+                «La maîtrise de la communication écrite est le premier pilier 
+                de l'assistante administrative.»
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cours -->
+      <div id="page-cours" class="page-view">
+        <div class="page-header">
+          <h1>📚 Mes Cours</h1>
+          <p>Explorez les modules de science administrative.</p>
+        </div>
+        <div id="cours-content"></div>
+      </div>
+
+      <!-- Exercices -->
+      <div id="page-exercices" class="page-view">
+        <div class="page-header">
+          <h1>🧠 Exercices</h1>
+          <p>Testez vos connaissances.</p>
+        </div>
+        <div id="quiz-content"></div>
+      </div>
+
+      <!-- Assistant IA -->
+      <div id="page-assistant" class="page-view">
+        <div class="page-header">
+          <h1>🤖 Assistant IA</h1>
+          <p>Posez vos questions sur les cours.</p>
+        </div>
+        <div class="chat-box">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message ai">
+              <div class="message-avatar">🤖</div>
+              <div class="message-bubble">
+                Bonjour ! Je suis votre assistant IA. Comment puis-je vous aider ?
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-bar">
+            <textarea
+              id="chat-input"
+              placeholder="Posez votre question..."
+              rows="1"
+            ></textarea>
+            <button id="chat-send">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progression -->
+      <div id="page-progression" class="page-view">
+        <div class="page-header">
+          <h1>📊 Ma Progression</h1>
+          <p>Suivez votre avancement.</p>
+        </div>
+        <div id="progression-content"></div>
+      </div>
+
+      <!-- Profil -->
+      <div id="page-profil" class="page-view">
+        <div class="page-header">
+          <h1>👤 Mon Profil</h1>
+        </div>
+        <div id="profil-content"></div>
+      </div>
+
+      <!-- Paramètres -->
+      <div id="page-parametres" class="page-view">
+        <div class="page-header">
+          <h1>⚙️ Paramètres</h1>
+          <p>Configurez votre expérience.</p>
+        </div>
+        <div class="card" style="max-width:600px">
+          <div class="section-title">🤖 Clé API Intelligence Artificielle</div>
+          <p style="font-size:0.88rem;color:#4A4065;margin-bottom:16px">
+            Entrez votre clé API Claude d'Anthropic pour activer l'assistant IA.
+          </p>
+          <div class="form-group">
+            <label>Clé API Anthropic</label>
+            <input type="password" id="api-key-input" placeholder="sk-ant-api03-…">
+          </div>
+          <button id="save-api-key" class="btn-primary" style="width:auto;padding:12px 24px">
+            💾 Enregistrer
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Notifications -->
+  <div id="toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
+```
+
+---
+
+### Sauvegardez
+```
+Ctrl + S

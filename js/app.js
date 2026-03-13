@@ -553,7 +553,7 @@ document.getElementById('show-login').addEventListener('click', function(e) {
 // Mode démo
 document.getElementById('demo-btn').addEventListener('click', function() {
   etat.user = {
-    id: 0, name: 'Marie Claire',
+    id: 0, name: 'Louissaint Molishka',
     email: 'demo@claudimyrlearn.ht',
     joinDate: new Date().toLocaleDateString('fr'),
     points: 120, streak: 7, quizCount: 3

@@ -1,6 +1,4 @@
-/* ================================
-   CLAUDIMYRLEARN — CSS COMPLET
-   ================================ */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -740,8 +738,5 @@ p { color: var(--text-mid); line-height: 1.6; }
 .eis-q3 { background: rgba(255,209,102,0.15);border-radius: 12px; padding: 16px; border: 2px solid rgba(255,209,102,0.4); line-height: 1.6; }
 .eis-q4 { background: rgba(6,214,160,0.08);  border-radius: 12px; padding: 16px; border: 2px solid rgba(6,214,160,0.3);   line-height: 1.6; }
 .eisenhower span { font-size: 0.85rem; color: var(--text-mid); }
-```
 
-### 4. Sauvegardez et rafraîchissez
-```
-Ctrl + S  puis  F5
+

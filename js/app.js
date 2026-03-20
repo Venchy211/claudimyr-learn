@@ -527,8 +527,8 @@ function allerVers(page) {
   // Rendre le contenu
   if (page === 'dashboard')   renderDashboard();
   if (page === 'cours')       renderCours();
-  if (page === 'progression') renderProgression();
   if (page === 'exercices')   renderExercices();
+  if (page === 'progression') renderProgression();
   if (page === 'profil')      renderProfil();
 }
 
@@ -563,6 +563,10 @@ document.getElementById('demo-btn').addEventListener('click', function() {
     m2: ['l2-1'],
     m3: [], m4: [], m5: [], m6: []
   };
+  // Charger la clé API si déjà sauvegardée
+  const savedKey = localStorage.getItem('cl_apikey');
+  if (savedKey) etat.apiKey = savedKey;
+
   toast('Connexion en mode démo 👩‍💼', 'success');
   setTimeout(() => lancerApplication(), 1000);
 });
@@ -694,11 +698,12 @@ function lancerApplication() {
     }
   });
 
-  // Charger clé API sauvegardée
+  // Charger clé API sauvegardée — TOUJOURS au démarrage
   const savedKey = localStorage.getItem('cl_apikey');
   if (savedKey) {
     etat.apiKey = savedKey;
-    document.getElementById('api-key-input').value = savedKey;
+    const inputEl = document.getElementById('api-key-input');
+    if (inputEl) inputEl.value = savedKey;
   }
 
   // Afficher le dashboard
@@ -1068,20 +1073,28 @@ async function envoyerMessage() {
 
   ajouterMessage(texte, 'user');
 
+
   const typingId = 'typing-' + Date.now();
   ajouterTyping(typingId);
 
   try {
-    if (!etat.apiKey) throw new Error('Pas de clé API');
     const reponse = await appelIA(texte);
     document.getElementById(typingId)?.remove();
     ajouterMessage(reponse, 'ai');
   } catch (err) {
     document.getElementById(typingId)?.remove();
-    const msg = !etat.apiKey
-      ? '⚠️ Configurez votre clé API dans Paramètres ⚙️ pour activer l\'IA.'
-      : '⚠️ Erreur de connexion. Vérifiez votre clé API.';
+    let msg = '⚠️ Erreur : ';
+    if (err.message.includes('401')) {
+      msg += 'Clé API invalide. Vérifiez-la dans Paramètres.';
+    } else if (err.message.includes('429')) {
+      msg += 'Trop de requêtes. Attendez quelques secondes.';
+    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      msg += 'Erreur réseau. Vérifiez votre connexion internet.';
+    } else {
+      msg += err.message;
+    }
     ajouterMessage(msg, 'ai');
+    console.error('Erreur IA:', err);
   }
 }
 
@@ -1110,636 +1123,110 @@ function ajouterTyping(id) {
   container.scrollTop = container.scrollHeight;
 }
 
+/* ══════════════════════════════
+   BASE DE CONNAISSANCES HORS LIGNE
+══════════════════════════════ */
+const BASE_IA = [
+  { mots: ['bonjour','salut','aide','help','comment','quoi'],
+    rep: `👋 <strong>Bonjour ! Je suis votre assistante IA.</strong><br><br>
+Je peux vous aider sur tous les cours :<br>
+- 🏛️ Administration et structures<br>
+- ✉️ Lettres, notes et rapports<br>
+- 📂 Classement et archivage<br>
+- ⏰ Gestion du temps<br>
+- 🤝 Accueil et téléphone<br>
+- 💰 Facturation et comptabilité<br><br>
+Posez votre question !` },
+
+  { mots: ['administration','définition','concept','fayol'],
+    rep: `📚 <strong>L'administration selon Fayol</strong><br><br>
+5 fonctions : <strong>Prévoir, Organiser, Commander, Coordonner, Contrôler</strong>.<br><br>
+L'assistante gère : courrier, agenda, documents, accueil, archivage.` },
+
+  { mots: ['lettre','rédaction','correspondance','administrative'],
+    rep: `✉️ <strong>La lettre administrative</strong><br><br>
+9 éléments : En-tête → Date → Destinataire → Références → Objet → Formule d'appel → Corps → Politesse → Signature.<br><br>
+📌 À un supérieur : <em>«Veuillez agréer l'expression de ma respectueuse considération.»</em>` },
+
+  { mots: ['note','service','rapport','compte-rendu'],
+    rep: `📝 <strong>Documents internes</strong><br><br>
+- <strong>Note</strong> : brève, directive, interne.<br>
+- <strong>Rapport</strong> : détaillé, avec recommandations.<br>
+- <strong>Compte-rendu</strong> : narration factuelle d'une réunion.` },
+
+  { mots: ['classement','classer','archivage','méthode'],
+    rep: `📂 <strong>Les 5 méthodes de classement</strong><br><br>
+- 🔤 Alphabétique — noms de clients<br>
+- 🔢 Numérique — factures<br>
+- 📅 Chronologique — courriers<br>
+- 📁 Thématique — par sujet<br>
+- 🔡 Alphanumérique — A001, B002<br><br>
+🏆 Retrouver tout document en moins de <strong>3 minutes</strong> !` },
+
+  { mots: ['priorité','eisenhower','urgent','important'],
+    rep: `⏰ <strong>Matrice d'Eisenhower</strong><br><br>
+🔴 Q1 — Urgent + Important → Faire maintenant<br>
+🟣 Q2 — Important + Non urgent → Planifier<br>
+🟡 Q3 — Urgent + Non important → Déléguer<br>
+🟢 Q4 — Non urgent + Non important → Éliminer` },
+
+  { mots: ['accueil','visiteur','4x20','règle'],
+    rep: `🤝 <strong>Règle des 4×20</strong><br><br>
+- 20 premières secondes : 1ère impression<br>
+- 20 premiers gestes : posture ouverte<br>
+- 20 premiers mots : formule d'accueil<br>
+- 20 cm de distance : espace respectueux` },
+
+  { mots: ['téléphone','appel','décrocher','sonnerie'],
+    rep: `📞 <strong>Communication téléphonique</strong><br><br>
+Formule : <em>«[Organisation], [prénom], bonjour.»</em><br><br>
+- Décrocher avant la 3e sonnerie<br>
+- Écoute active — ne jamais interrompre<br>
+- Prendre message : nom, numéro, objet, heure` },
+
+  { mots: ['facture','tva','ht','ttc','calcul'],
+    rep: `💰 <strong>Calcul TVA</strong><br><br>
+Prix HT × Taux = TVA<br>
+Prix HT + TVA = Prix TTC<br><br>
+Exemple : 10 000 HTG × 10% = 1 000 HTG → TTC = 11 000 HTG` },
+
+  { mots: ['budget','écart','caisse','dépense'],
+    rep: `📊 <strong>Budget</strong><br><br>
+✅ Écart favorable : dépenses < budget<br>
+❌ Écart défavorable : dépenses > budget<br><br>
+Petite caisse = petites dépenses courantes en espèces.` }
+];
+
+function rechercherReponseLocale(message) {
+  const msg = message.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  let meilleur = null;
+  let maxScore = 0;
+
+  for (const item of BASE_IA) {
+    let score = 0;
+    for (const mot of item.mots) {
+      const motNorm = mot.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (msg.includes(motNorm)) score++;
+    }
+    if (score > maxScore) {
+      maxScore = score;
+      meilleur = item;
+    }
+  }
+
+  if (meilleur && maxScore > 0) return meilleur.rep;
+
+  return `🤔 Essayez ces mots-clés :<br>
+<em>administration, lettre, note, rapport, classement, agenda, priorité, accueil, téléphone, facture, TVA, budget</em>`;
+}
+
 async function appelIA(message) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': etat.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system: `Tu es un tuteur IA expert en science administrative
-               pour étudiantes en Haïti. Tu réponds toujours en français,
-               de façon claire, simple et pédagogique.`,
-      messages: [{ role: 'user', content: message }]
-    })
-  });
-
-  if (!res.ok) throw new Error('API error ' + res.status);
-  const data = await res.json();
-  return data.content[0]?.text || 'Désolée, je n\'ai pas pu répondre.';
-}
-/* ══════════════════════════════
-   DONNÉES DES QUIZ
-══════════════════════════════ */
-const QUIZ_DATA = {
-  m1: [
-    {
-      question: "Selon Fayol, combien y a-t-il de fonctions administratives ?",
-      options: ["3", "4", "5", "6"],
-      answer: 2,
-      explication: "Fayol définit 5 fonctions : Prévoir, Organiser, Commander, Coordonner, Contrôler."
-    },
-    {
-      question: "Quelle structure donne à chaque employé un seul supérieur direct ?",
-      options: ["Matricielle", "Fonctionnelle", "Hiérarchique", "Horizontale"],
-      answer: 2,
-      explication: "La structure hiérarchique garantit l'unité de commandement : un seul chef par employé."
-    },
-    {
-      question: "Qu'est-ce qu'un organigramme ?",
-      options: [
-        "Un tableau de chiffres",
-        "Une représentation graphique de la structure",
-        "Un document comptable",
-        "Un formulaire de demande"
-      ],
-      answer: 1,
-      explication: "L'organigramme représente visuellement la hiérarchie et les relations entre postes."
-    },
-    {
-      question: "Le secret professionnel oblige l'assistante à :",
-      options: [
-        "Partager toutes les infos",
-        "Ne divulguer aucune information confidentielle",
-        "Publier les données de l'entreprise",
-        "Transmettre les dossiers aux clients"
-      ],
-      answer: 1,
-      explication: "Le secret professionnel est une obligation légale de confidentialité."
-    },
-    {
-      question: "Quelle est la différence entre administration publique et privée ?",
-      options: [
-        "Le salaire des employés",
-        "La taille de l'organisation",
-        "La mission de service public vs but lucratif",
-        "La langue utilisée"
-      ],
-      answer: 2,
-      explication: "L'administration publique sert l'intérêt général, le privé cherche le profit."
-    }
-  ],
-  m2: [
-    {
-      question: "Quelle formule utilise-t-on pour s'adresser à un supérieur ?",
-      options: [
-        "Cordialement",
-        "Amicalement",
-        "Veuillez agréer l'expression de ma respectueuse considération",
-        "Bien à vous"
-      ],
-      answer: 2,
-      explication: "Pour un supérieur hiérarchique, on utilise 'respectueuse considération'."
-    },
-    {
-      question: "Que signifie N/Réf dans une lettre ?",
-      options: [
-        "Numéro de référence du client",
-        "Notre référence interne",
-        "Nouvelle réglementation",
-        "Numéro de réponse"
-      ],
-      answer: 1,
-      explication: "N/Réf = Notre Référence, c'est la référence interne de l'expéditeur."
-    },
-    {
-      question: "La note de service est principalement :",
-      options: [
-        "Un document envoyé aux clients",
-        "Un document interne au personnel",
-        "Un contrat commercial",
-        "Un rapport financier"
-      ],
-      answer: 1,
-      explication: "La note de service est un outil de communication interne descendante."
-    },
-    {
-      question: "Quelle est la longueur idéale d'une phrase en rédaction administrative ?",
-      options: ["5 mots", "20 mots maximum", "50 mots", "Pas de limite"],
-      answer: 1,
-      explication: "Une phrase courte (max 20 mots) est plus claire et professionnelle."
-    },
-    {
-      question: "Le rapport administratif se distingue de la note car il est :",
-      options: [
-        "Plus court",
-        "Toujours confidentiel",
-        "Envoyé à l'extérieur",
-        "Détaillé avec des recommandations"
-      ],
-      answer: 3,
-      explication: "Le rapport analyse en profondeur et propose des recommandations."
-    }
-  ],
-  m3: [
-    {
-      question: "Quelle méthode est idéale pour classer des factures ?",
-      options: ["Alphabétique", "Thématique", "Numérique", "Géographique"],
-      answer: 2,
-      explication: "Le classement numérique est parfait pour les factures qui ont chacune un numéro unique."
-    },
-    {
-      question: "Le classement thématique regroupe les documents par :",
-      options: ["Date", "Nom", "Sujet ou domaine", "Numéro"],
-      answer: 2,
-      explication: "Le classement thématique organise par sujet : RH, Comptabilité, Juridique…"
-    },
-    {
-      question: "En combien de minutes maximum doit-on retrouver un document ?",
-      options: ["1 minute", "3 minutes", "10 minutes", "30 minutes"],
-      answer: 1,
-      explication: "Un bon système de classement permet de retrouver tout document en moins de 3 minutes."
-    },
-    {
-      question: "Quel est le format correct pour nommer un fichier numérique ?",
-      options: [
-        "document1.pdf",
-        "2026-03-11_Facture_001.pdf",
-        "facture finale FINAL.pdf",
-        "truc.pdf"
-      ],
-      answer: 1,
-      explication: "Un bon nom de fichier inclut la date, le type et le numéro pour un classement clair."
-    },
-    {
-      question: "Le classement alphanumérique combine :",
-      options: [
-        "Dates et noms",
-        "Couleurs et codes",
-        "Lettres et numéros",
-        "Alphabet arabe et latin"
-      ],
-      answer: 2,
-      explication: "Alphanumérique = lettres pour les catégories + numéros pour les éléments (A001, B002)."
-    }
-  ],
-  m4: [
-    {
-      question: "Dans la matrice d'Eisenhower, Q1 représente :",
-      options: [
-        "Important non urgent",
-        "Urgent non important",
-        "Urgent et important",
-        "Non urgent non important"
-      ],
-      answer: 2,
-      explication: "Q1 = Urgent ET Important → à traiter immédiatement en priorité absolue."
-    },
-    {
-      question: "Les tâches Q2 (importantes non urgentes) doivent être :",
-      options: ["Éliminées", "Déléguées", "Planifiées", "Faites immédiatement"],
-      answer: 2,
-      explication: "Q2 = planifier : formation, projets stratégiques, développement personnel."
-    },
-    {
-      question: "Combien de temps avant faut-il confirmer un rendez-vous ?",
-      options: ["1 semaine", "24 heures", "1 heure", "Le matin même"],
-      answer: 1,
-      explication: "Confirmer 24h avant laisse le temps de s'organiser en cas de changement."
-    },
-    {
-      question: "Une to-do list est :",
-      options: [
-        "Un agenda de réunions",
-        "Un inventaire quotidien des tâches",
-        "Un carnet de contacts",
-        "Un registre de courrier"
-      ],
-      answer: 1,
-      explication: "La to-do list est l'outil simple pour ne rien oublier et prioriser ses actions."
-    },
-    {
-      question: "Les distractions appartiennent à quel quadrant ?",
-      options: ["Q1", "Q2", "Q3", "Q4"],
-      answer: 3,
-      explication: "Q4 = Non urgent ET Non important → à éliminer pour gagner du temps."
-    }
-  ],
-  m5: [
-    {
-      question: "La règle des 4×20 parle des 20 premières :",
-      options: [
-        "Pages d'un rapport",
-        "Secondes, gestes, mots et cm",
-        "Minutes d'une réunion",
-        "Appels téléphoniques"
-      ],
-      answer: 1,
-      explication: "4×20 : 20 secondes, 20 gestes, 20 mots, 20 cm — les bases de l'accueil parfait."
-    },
-    {
-      question: "Avant quelle sonnerie faut-il décrocher le téléphone ?",
-      options: ["1ère", "2ème", "3ème", "5ème"],
-      answer: 2,
-      explication: "La norme professionnelle est de décrocher avant la 3e sonnerie."
-    },
-    {
-      question: "Face à un interlocuteur mécontent, que faire en premier ?",
-      options: [
-        "Raccrocher",
-        "Appeler la sécurité",
-        "Rester calme et écouter",
-        "Ignorer la personne"
-      ],
-      answer: 2,
-      explication: "Toujours rester calme et laisser s'exprimer. La personne a besoin d'être entendue."
-    },
-    {
-      question: "La formule standard au décroché est :",
-      options: [
-        "Allô, c'est qui ?",
-        "Quoi ?",
-        "[Organisation], [prénom], bonjour",
-        "Ne pas parler, attendre"
-      ],
-      answer: 2,
-      explication: "La formule identifie l'organisation, la personne et salue chaleureusement."
-    },
-    {
-      question: "Un message téléphonique complet contient :",
-      options: [
-        "Seulement le nom",
-        "Nom, coordonnées, objet et heure",
-        "Seulement l'heure",
-        "Le sujet uniquement"
-      ],
-      answer: 1,
-      explication: "Un message complet permet de rappeler efficacement avec toutes les infos."
-    }
-  ],
-  m6: [
-    {
-      question: "Si le prix HT est 5 000 HTG et la TVA 10%, quel est le TTC ?",
-      options: ["4 500 HTG", "5 100 HTG", "5 500 HTG", "6 000 HTG"],
-      answer: 2,
-      explication: "TVA = 5000 × 10% = 500. Prix TTC = 5000 + 500 = 5 500 HTG."
-    },
-    {
-      question: "Un bon de commande officialise :",
-      options: [
-        "La livraison d'une marchandise",
-        "Un paiement effectué",
-        "Une commande passée à un fournisseur",
-        "Une offre de prix"
-      ],
-      answer: 2,
-      explication: "Le bon de commande est le document officiel par lequel l'acheteur commande."
-    },
-    {
-      question: "Un écart budgétaire favorable signifie que :",
-      options: [
-        "Les dépenses dépassent le budget",
-        "Le budget est équilibré",
-        "Les dépenses sont inférieures au budget",
-        "Il faut couper des dépenses"
-      ],
-      answer: 2,
-      explication: "Écart favorable = dépenses < prévisions. C'est une bonne nouvelle !"
-    },
-    {
-      question: "La petite caisse sert à :",
-      options: [
-        "Payer les gros investissements",
-        "Stocker les bilans",
-        "Payer les salaires",
-        "Régler les petites dépenses courantes"
-      ],
-      answer: 3,
-      explication: "La petite caisse couvre les petits achats quotidiens en espèces."
-    },
-    {
-      question: "Quelle mention N'est PAS obligatoire sur une facture ?",
-      options: [
-        "Numéro de facture",
-        "Date d'émission",
-        "Photo du vendeur",
-        "Prix TTC"
-      ],
-      answer: 2,
-      explication: "La photo n'est jamais requise. Les mentions obligatoires sont : numéro, date, parties, prix…"
-    }
-  ]
-};
-
-/* ══════════════════════════════
-   ÉTAT DU QUIZ
-══════════════════════════════ */
-let quiz = {
-  moduleId:  null,
-  questions: [],
-  current:   0,
-  score:     0,
-  repondu:   false,
-  timer:     null,
-  tempsLeft: 30
-};
-
-/* ══════════════════════════════
-   RENDER EXERCICES
-══════════════════════════════ */
-function renderExercices() {
-  const el = document.getElementById('quiz-content');
-  el.innerHTML = `
-    <div style="display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-      gap:16px">
-      ${MODULES.map(m => {
-        const meilleur = localStorage.getItem('cl_quiz_' + m.id) || 0;
-        return `
-          <div class="card" style="cursor:pointer;text-align:center;
-            padding:28px;transition:all 0.25s"
-            onmouseover="this.style.transform='translateY(-4px)'"
-            onmouseout="this.style.transform='translateY(0)'"
-            onclick="demarrerQuiz('${m.id}')">
-            <div style="font-size:2.5rem;margin-bottom:12px">${m.icon}</div>
-            <h4 style="font-size:0.95rem;margin-bottom:6px">${m.titre}</h4>
-            <p style="font-size:0.82rem;margin-bottom:12px">
-              ${QUIZ_DATA[m.id].length} questions
-            </p>
-            ${meilleur > 0 ? `
-              <div style="background:rgba(255,209,102,0.2);
-                color:#8A6A00;padding:4px 12px;border-radius:99px;
-                font-size:0.8rem;font-weight:700;display:inline-block">
-                🏆 Meilleur : ${meilleur}%
-              </div>` : `
-              <div style="background:rgba(91,79,207,0.08);
-                color:var(--indigo-light);padding:4px 12px;
-                border-radius:99px;font-size:0.8rem;
-                font-weight:600;display:inline-block">
-                Pas encore tenté
-              </div>`}
-          </div>`;
-      }).join('')}
-    </div>`;
+  await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+  return rechercherReponseLocale(message);
 }
 
-/* ══════════════════════════════
-   DÉMARRER UN QUIZ
-══════════════════════════════ */
-function demarrerQuiz(moduleId) {
-  quiz = {
-    moduleId,
-    questions: QUIZ_DATA[moduleId],
-    current:   0,
-    score:     0,
-    repondu:   false,
-    timer:     null,
-    tempsLeft: 30
-  };
-  afficherQuestion();
-}
-
-/* ══════════════════════════════
-   AFFICHER UNE QUESTION
-══════════════════════════════ */
-function afficherQuestion() {
-  const q      = quiz.questions[quiz.current];
-  const lettre = ['A', 'B', 'C', 'D'];
-  const el     = document.getElementById('quiz-content');
-
-  el.innerHTML = `
-    <div style="max-width:680px;margin:0 auto">
-
-      <!-- Barre de progression -->
-      <div style="background:white;border-radius:16px;padding:16px 24px;
-        margin-bottom:20px;border:1px solid var(--border);
-        display:flex;align-items:center;gap:16px">
-        <span style="font-weight:700;color:var(--indigo);white-space:nowrap">
-          ${quiz.current + 1} / ${quiz.questions.length}
-        </span>
-        <div style="flex:1;height:8px;background:var(--border);
-          border-radius:99px;overflow:hidden">
-          <div style="height:100%;border-radius:99px;
-            background:linear-gradient(90deg,var(--indigo-light),var(--coral));
-            width:${((quiz.current) / quiz.questions.length) * 100}%;
-            transition:width 0.5s ease"></div>
-        </div>
-        <div id="quiz-timer" style="font-weight:700;color:var(--coral);
-          white-space:nowrap">⏱ 30s</div>
-      </div>
-
-      <!-- Question -->
-      <div class="card" style="padding:32px">
-        <p style="font-family:'Fraunces',serif;font-size:1.2rem;
-          color:var(--indigo);margin-bottom:28px;line-height:1.5">
-          ${q.question}
-        </p>
-
-        <div style="display:flex;flex-direction:column;gap:12px"
-          id="options-list">
-          ${q.options.map((opt, i) => `
-            <button id="opt-${i}"
-              onclick="choisirReponse(${i})"
-              style="padding:14px 20px;border:2px solid var(--border);
-                border-radius:12px;background:white;cursor:pointer;
-                font-family:'DM Sans',sans-serif;font-size:0.95rem;
-                color:var(--text-dark);transition:all 0.2s;
-                text-align:left;display:flex;align-items:center;gap:12px">
-              <span style="width:28px;height:28px;border-radius:50%;
-                background:var(--cream);font-weight:700;font-size:0.85rem;
-                display:flex;align-items:center;justify-content:center;
-                flex-shrink:0;color:var(--text-muted)">
-                ${lettre[i]}
-              </span>
-              ${opt}
-            </button>`).join('')}
-        </div>
-
-        <div id="quiz-explication" style="display:none;margin-top:20px"></div>
-
-        <div style="margin-top:24px;text-align:right">
-          <button id="btn-suivant" onclick="questionSuivante()"
-            style="display:none" class="btn-primary"
-            style="width:auto;padding:12px 28px">
-            ${quiz.current + 1 < quiz.questions.length
-              ? 'Question suivante →'
-              : 'Voir les résultats 🏆'}
-          </button>
-        </div>
-      </div>
-
-      <div style="margin-top:14px;text-align:center">
-        <button onclick="renderExercices()"
-          class="btn-ghost" style="width:auto;padding:8px 20px;
-          font-size:0.85rem">
-          ← Quitter le quiz
-        </button>
-      </div>
-    </div>`;
-
-  demarrerTimer();
-}
-
-/* ══════════════════════════════
-   TIMER
-══════════════════════════════ */
-function demarrerTimer() {
-  quiz.tempsLeft = 30;
-  clearInterval(quiz.timer);
-
-  quiz.timer = setInterval(() => {
-    quiz.tempsLeft--;
-    const el = document.getElementById('quiz-timer');
-    if (el) {
-      el.textContent = '⏱ ' + quiz.tempsLeft + 's';
-      el.style.color = quiz.tempsLeft <= 10
-        ? 'var(--coral)' : 'var(--text-muted)';
-    }
-    if (quiz.tempsLeft <= 0) {
-      clearInterval(quiz.timer);
-      if (!quiz.repondu) choisirReponse(-1);
-    }
-  }, 1000);
-}
-
-/* ══════════════════════════════
-   CHOISIR UNE RÉPONSE
-══════════════════════════════ */
-function choisirReponse(idx) {
-  if (quiz.repondu) return;
-  quiz.repondu = true;
-  clearInterval(quiz.timer);
-
-  const q       = quiz.questions[quiz.current];
-  const correct = q.answer;
-
-  // Colorer les boutons
-  for (let i = 0; i < q.options.length; i++) {
-    const btn = document.getElementById('opt-' + i);
-    if (!btn) continue;
-    btn.disabled = true;
-    if (i === correct) {
-      btn.style.borderColor = 'var(--mint)';
-      btn.style.background  = 'rgba(6,214,160,0.1)';
-      btn.style.color       = '#05A87D';
-    } else if (i === idx && i !== correct) {
-      btn.style.borderColor = 'var(--coral)';
-      btn.style.background  = 'rgba(255,94,91,0.08)';
-      btn.style.color       = 'var(--coral)';
-    }
-  }
-
-  // Compter le score
-  if (idx === correct) quiz.score++;
-
-  // Afficher l'explication
-  const expEl = document.getElementById('quiz-explication');
-  if (expEl) {
-    expEl.style.display = 'block';
-    expEl.innerHTML = `
-      <div style="padding:14px 18px;border-radius:10px;
-        background:${idx === correct
-          ? 'rgba(6,214,160,0.08)' : 'rgba(255,94,91,0.07)'};
-        border-left:4px solid ${idx === correct
-          ? 'var(--mint)' : 'var(--coral)'};
-        font-size:0.9rem;line-height:1.6">
-        ${idx === correct ? '✅ Bonne réponse !' : '❌ Incorrect.'} 
-        ${q.explication}
-      </div>`;
-  }
-
-  // Afficher bouton suivant
-  const btnSuivant = document.getElementById('btn-suivant');
-  if (btnSuivant) btnSuivant.style.display = 'inline-flex';
-}
-
-/* ══════════════════════════════
-   QUESTION SUIVANTE
-══════════════════════════════ */
-function questionSuivante() {
-  quiz.current++;
-  quiz.repondu = false;
-
-  if (quiz.current >= quiz.questions.length) {
-    afficherResultat();
-  } else {
-    afficherQuestion();
-  }
-}
-
-/* ══════════════════════════════
-   RÉSULTAT FINAL
-══════════════════════════════ */
-function afficherResultat() {
-  clearInterval(quiz.timer);
-
-  const total  = quiz.questions.length;
-  const score  = quiz.score;
-  const pct    = Math.round((score / total) * 100);
-  const mod    = MODULES.find(m => m.id === quiz.moduleId);
-
-  // Sauvegarder meilleur score
-  const ancien = parseInt(localStorage.getItem('cl_quiz_' + quiz.moduleId) || '0');
-  if (pct > ancien) {
-    localStorage.setItem('cl_quiz_' + quiz.moduleId, pct.toString());
-    if (etat.user) {
-      etat.user.quizCount = (etat.user.quizCount || 0) + 1;
-      etat.user.points    = (etat.user.points    || 0) + score * 5;
-    }
-  }
-
-  const msg = pct >= 80
-    ? 'Excellent travail ! 🏆'
-    : pct >= 60
-    ? 'Bon résultat ! Continue 💪'
-    : 'Continue à réviser ! 📖';
-
-  const el = document.getElementById('quiz-content');
-  el.innerHTML = `
-    <div style="max-width:580px;margin:0 auto">
-      <div style="background:linear-gradient(135deg,#2D1B69,#5B4FCF);
-        border-radius:24px;padding:48px 40px;text-align:center;color:white">
-
-        <div style="font-family:'Fraunces',serif;font-size:5rem;
-          font-weight:700;color:var(--gold);line-height:1;
-          margin-bottom:12px">${pct}%</div>
-
-        <h2 style="color:white;margin-bottom:8px">${msg}</h2>
-        <p style="color:rgba(255,255,255,0.8);margin-bottom:28px">
-          ${mod.icon} ${mod.titre}
-        </p>
-
-        <div style="display:flex;justify-content:center;gap:32px;
-          margin-bottom:32px">
-          <div style="text-align:center">
-            <div style="font-family:'Fraunces',serif;font-size:2rem;
-              font-weight:700;color:var(--gold)">${score}</div>
-            <div style="font-size:0.8rem;opacity:0.75">Bonnes réponses</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-family:'Fraunces',serif;font-size:2rem;
-              font-weight:700;color:var(--gold)">${total - score}</div>
-            <div style="font-size:0.8rem;opacity:0.75">Erreurs</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-family:'Fraunces',serif;font-size:2rem;
-              font-weight:700;color:var(--gold)">${score * 5}</div>
-            <div style="font-size:0.8rem;opacity:0.75">Points gagnés</div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:12px;justify-content:center;
-          flex-wrap:wrap">
-          <button onclick="demarrerQuiz('${quiz.moduleId}')"
-            class="btn-coral" style="width:auto;padding:12px 24px">
-            🔄 Recommencer
-          </button>
-          <button onclick="renderExercices()"
-            style="background:rgba(255,255,255,0.15);border:none;
-              color:white;padding:12px 24px;border-radius:12px;
-              cursor:pointer;font-family:'DM Sans',sans-serif;
-              font-size:0.95rem;font-weight:600">
-            ← Autres modules
-          </button>
-        </div>
-      </div>
-    </div>`;
-}
 /* ══════════════════════════════
    DÉMARRAGE
 ══════════════════════════════ */
